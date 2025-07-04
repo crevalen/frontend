@@ -1,0 +1,5 @@
+
+User-agent: *
+Allow: /
+
+Sitemap: https://nama-domain-anda.com/sitemap-index.xml

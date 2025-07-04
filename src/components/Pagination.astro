@@ -1,0 +1,45 @@
+---
+// src/components/Pagination.astro
+import type { Page } from 'astro';
+
+interface Props {
+  page: Page;
+}
+
+const { page } = Astro.props;
+
+// Fungsi untuk membangun URL yang benar untuk setiap nomor halaman
+const getPageUrl = (num: number) => {
+    const url = new URL(page.url.current, Astro.site);
+    url.searchParams.set('page', num.toString());
+    return url.pathname + url.search;
+}
+---
+<nav class="flex items-center justify-center mt-12 pt-8 border-t border-[var(--color-border)] dark:border-[var(--color-dark-border)]">
+    {page.url.prev ? (
+        <a href={page.url.prev} class="px-4 py-2 mx-1 font-semibold text-[var(--color-secondary)] dark:text-[var(--color-dark-secondary)] rounded-md hover:bg-[var(--color-border)] dark:hover:bg-[var(--color-dark-border)] transition-colors">&laquo; Sebelumnya</a>
+    ) : (
+        <span class="px-4 py-2 mx-1 text-gray-400 dark:text-gray-600 cursor-not-allowed">&laquo; Sebelumnya</span>
+    )}
+
+    {Array.from({ length: page.totalPages }, (_, i) => i + 1).map((num) => (
+        <a 
+            href={getPageUrl(num)}
+            class:list={[
+                "hidden sm:inline-block px-4 py-2 mx-1 font-semibold rounded-md transition-colors",
+                { 
+                    "bg-[var(--color-primary)] text-[var(--color-primary-text)] pointer-events-none": num === page.currentPage,
+                    "text-[var(--color-secondary)] dark:text-[var(--color-dark-secondary)] hover:bg-[var(--color-border)] dark:hover:bg-[var(--color-dark-border)]": num !== page.currentPage
+                }
+            ]}
+        >
+            {num}
+        </a>
+    ))}
+
+    {page.url.next ? (
+        <a href={page.url.next} class="px-4 py-2 mx-1 font-semibold text-[var(--color-secondary)] dark:text-[var(--color-dark-secondary)] rounded-md hover:bg-[var(--color-border)] dark:hover:bg-[var(--color-dark-border)] transition-colors">Selanjutnya &raquo;</a>
+    ) : (
+        <span class="px-4 py-2 mx-1 text-gray-400 dark:text-gray-600 cursor-not-allowed">Selanjutnya &raquo;</span>
+    )}
+</nav>

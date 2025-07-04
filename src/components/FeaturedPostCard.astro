@@ -1,0 +1,32 @@
+---
+// src/components/FeaturedPostCard.astro
+import type { Post } from '../types';
+const { post } = Astro.props as { post: Post };
+const postUrl = `/${post.category?.slug}/${post.slug}`;
+const imageUrl = `https://hddoosyogucukctznlog.supabase.co/storage/v1/object/public/asset/${post.featured_image.filename_disk}`
+function createExcerpt(htmlContent: string, maxLength: number = 150) {
+  const text = htmlContent.replace(/<[^>]+>/g, '');
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength).trim() + '...';
+}
+const excerpt = createExcerpt(post.content);
+---
+<article class="flex flex-col h-full">
+    {imageUrl && (
+        <a href={postUrl}>
+            <img src={imageUrl} alt={post.title} class="w-full aspect-[16/9] object-cover rounded-xl mb-4" />
+        </a>
+    )}
+    <div class="flex flex-col flex-grow">
+        <div class="flex items-center gap-4 text-xs font-sans mb-2">
+            {post.category && <a href={`/categories/${post.category.slug}`} class="text-[var(--color-primary)] font-bold uppercase hover:underline">{post.category.name}</a>}
+            <span class="text-[var(--color-secondary)]">{new Date(post.date_published).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</span>
+        </div>
+        <h2 class="font-sans text-3xl lg:text-4xl font-bold text-[var(--color-text)] leading-tight">
+            <a href={postUrl} class="hover:text-[var(--color-primary)] transition-colors">{post.title}</a>
+        </h2>
+        <p class="text-[var(--color-secondary)] mt-4 text-base">
+            {excerpt}
+        </p>
+    </div>
+</article>

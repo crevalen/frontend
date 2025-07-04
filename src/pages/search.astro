@@ -1,0 +1,76 @@
+---
+// src/pages/search.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ArticleCard from '../components/ArticleCard.astro';
+import Pagination from '../components/Pagination.astro'; // Menggunakan kembali komponen pagination
+import directus from '../lib/directus';
+import { readItems } from '@directus/sdk';
+import type { Post } from '../types';
+
+
+
+// 1. Ambil query pencarian dari URL (?q=...)
+const query = Astro.url.searchParams.get('q');
+
+let allFoundPosts: Post[] = [];
+
+// 2. Jika ada query, cari artikel di Directus
+if (query) {
+    allFoundPosts = await directus.request(readItems('posts', {
+        search: query, // Gunakan parameter 'search' yang powerful dari Directus
+        fields: ['slug', 'title', 'date_published', 'featured_image.id', 'featured_image.filename_disk', 'category.name', 'category.slug'],
+        sort: ['-date_published']
+    })) as Post[];
+}
+
+
+export async function getStaticPaths({ paginate }) {
+    return [];
+}
+
+// Di Astro, untuk SSR, kita proses paginasi di luar getStaticPaths
+const itemsPerPage = 9;
+const totalPages = Math.ceil(allFoundPosts.length / itemsPerPage);
+const currentPage = parseInt(Astro.url.searchParams.get('page') || '1');
+const paginatedPosts = allFoundPosts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+// Objek 'page' untuk komponen Pagination
+const page = {
+    data: paginatedPosts,
+    currentPage: currentPage,
+    totalPages: totalPages,
+    url: {
+        current: `/search?q=${query}&page=${currentPage}`,
+        prev: currentPage > 1 ? `/search?q=${query}&page=${currentPage - 1}` : undefined,
+        next: currentPage < totalPages ? `/search?q=${query}&page=${currentPage + 1}` : undefined,
+    }
+}
+---
+<BaseLayout title={`Hasil Pencarian untuk "${query}"`}>
+    <div class="max-w-[1040px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <section>
+            <h1 class="text-3xl md:text-4xl font-bold font-sans mb-2 text-[var(--color-text)] dark:text-[var(--color-dark-text)]">
+                Hasil Pencarian
+            </h1>
+            <p class="text-[var(--color-secondary)] dark:text-[var(--color-dark-secondary)] mb-10">
+                {query ? `Menampilkan hasil untuk: "${query}"` : 'Silakan masukkan kata kunci.'}
+            </p>
+
+            {page.data.length > 0 ? (
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {page.data.map(post => (
+                        <ArticleCard post={post} />
+                    ))}
+                </div>
+            ) : (
+                query && <p class="text-center py-16 text-[var(--color-secondary)]">Tidak ada artikel yang cocok dengan pencarian Anda.</p>
+            )}
+
+            {page.totalPages > 1 && (
+                <div class="mt-16">
+                    <Pagination page={page} />
+                </div>
+            )}
+        </section>
+    </div>
+</BaseLayout>

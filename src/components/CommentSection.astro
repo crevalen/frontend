@@ -1,0 +1,36 @@
+---
+// src/components/CommentSection.astro
+import type { Comment } from '../types';
+import ReplyButton from './ReplyButton.tsx';
+
+const { comments, postID, isReply = false } = Astro.props as { comments: Comment[], postID: number, isReply?: boolean };
+---
+<div class:list={["space-y-6", { "pl-6 sm:pl-12 mt-6 border-l-2 border-border dark:border-dark-border": isReply }]}>
+    {comments && comments.length > 0 ? (
+        comments.map(comment => (
+            <div class="comment-item flex gap-3 sm:gap-4" id={`comment-${comment.id}`}>
+                <div class="w-10 h-10 bg-border dark:bg-dark-border rounded-full flex-shrink-0 grid place-content-center font-bold text-lg">
+                    {comment.author_name.charAt(0).toUpperCase()}
+                </div>
+                <div class="flex-grow">
+                    <p class="font-bold font-sans text-text dark:text-dark-text">{comment.author_name}</p>
+                    <p class="text-xs text-secondary dark:text-dark-secondary mb-2">
+                        {new Date(comment.date_created).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}
+                    </p>
+                    <div class="prose prose-sm dark:prose-invert max-w-none">
+                        <p>{comment.content}</p>
+                    </div>
+                    
+                    {/* PERUBAHAN DI SINI: Hapus kondisi !isReply */}
+                    <ReplyButton postID={postID} commentID={comment.id} client:visible />
+                    
+                    {comment.replies && comment.replies.length > 0 &&
+                        <Astro.self comments={comment.replies} postID={postID} isReply={true} />
+                    }
+                </div>
+            </div>
+        ))
+    ) : (
+        !isReply && <p class="text-secondary dark:text-dark-secondary">Belum ada komentar.</p>
+    )}
+</div>

@@ -1,0 +1,59 @@
+---
+// src/pages/kategori/[slug].astro
+import directus from '../../lib/directus.js';
+import { readItems } from '@directus/sdk';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import type { Post } from '../../types';
+
+export const prerender = false;
+export async function getStaticPaths() {
+    const categories = await directus.request(readItems('categories', {
+        fields: ['slug']
+    }));
+    return categories.map((category) => ({
+        params: { slug: category.slug },
+    }));
+}
+
+const { slug } = Astro.params;
+
+const categories = await directus.request(readItems('categories', {
+    filter: { slug: { _eq: slug } },
+    limit: 1
+}));
+const category = categories[0];
+
+const posts = (await directus.request(readItems('posts', {
+    filter: { category: { slug: { _eq: slug } } },
+    sort: ['-date_published'],
+    fields: ['title', 'slug', 'date_published', 'featured_image.id', 'category.name', 'category.slug']
+}))) as Post[];
+---
+<BaseLayout title={`Kategori: ${category.name}`}>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <header class="text-center mb-12 py-10 px-6 bg-[var(--color-card)] dark:bg-[var(--color-dark-card)] rounded-xl shadow-sm">
+            <nav aria-label="Breadcrumb" class="text-sm font-sans mb-2 text-[var(--color-secondary)]">
+                <a href="/" class="hover:text-[var(--color-primary)]">Beranda</a>
+                <span class="mx-2">/</span>
+                <span>Kategori</span>
+            </nav>
+            <h1 class="text-4xl md:text-5xl font-bold font-sans text-[var(--color-text)] dark:text-[var(--color-dark-text)]">
+                {category.name}
+            </h1>
+            <p class="mt-4 text-lg text-[var(--color-secondary)] dark:text-[var(--color-dark-secondary)]">
+                Menampilkan {posts.length} artikel dalam kategori ini.
+            </p>
+        </header>
+
+        {posts.length > 0 ? (
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {posts.map(post => (
+                    <ArticleCard post={post} />
+                ))}
+            </div>
+        ) : (
+            <p class="text-center py-16 text-[var(--color-secondary)]">Belum ada artikel dalam kategori ini.</p>
+        )}
+    </div>
+</BaseLayout>

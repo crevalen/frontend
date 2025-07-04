@@ -1,0 +1,35 @@
+---
+// src/components/TopHeader.astro
+import directus from '../lib/directus.js';
+import { readItems } from '@directus/sdk';
+
+const navLinks = await directus.request(readItems('pages', {
+    filter: { status: { _eq: "published" } },
+    fields: ['title', 'slug']
+}));
+
+const today = new Date();
+const formattedDate = today.toLocaleDateString('id-ID', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+});
+---
+{/* 👇 Tambahkan class 'hidden' dan 'lg:block' di sini */}
+<div class="hidden lg:block bg-[var(--color-primary)] text-white text-xs font-sans">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-8">
+            <div class="text-white/80">
+                {formattedDate}
+            </div>
+            <nav class="flex items-center gap-4">
+                {navLinks.map(link => (
+                    <a href={`/${link.slug}`} class="hover:text-white hover:underline">
+                        {link.title}
+                    </a>
+                ))}
+            </nav>
+        </div>
+    </div>
+</div>

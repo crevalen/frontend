@@ -1,0 +1,30 @@
+---
+// src/components/PopularPostsWidget.astro
+import type { Post } from '../types';
+const { posts } = Astro.props as { posts: Post[] };
+---
+<div class="bg-[var(--color-card)] border border-[var(--color-border)] h-full">
+    <h3 class="font-sans font-bold text-xl p-5 border-b border-[var(--color-border)]">
+        Paling Populer
+    </h3>
+    <div class="flex flex-col">
+        {posts.map((post, index) => {
+            const postUrl = `/${post.category?.slug}/${post.slug}`;
+            const imageUrl = `https://hddoosyogucukctznlog.supabase.co/storage/v1/object/public/asset/${post.featured_image.filename_disk}`
+            return (
+                <a href={postUrl} class="flex items-center gap-4 p-5 hover:bg-[var(--color-border)]/50 transition-colors border-b border-[var(--color-border)] last:border-b-0">
+                    <div class="text-3xl font-bold text-[var(--color-secondary)]/50">
+                        {index + 1}
+                    </div>
+                    {imageUrl && <img src={imageUrl} alt={post.title} class="w-16 h-16 object-cover flex-shrink-0" />}
+                    <div class="flex-grow">
+                        <p class="font-sans font-bold text-sm leading-snug text-[var(--color-text)] mb-1">{post.title}</p>
+                        <p class="text-xs text-[var(--color-secondary)]">
+                            {new Date(post.date_published).toLocaleDateString('id-ID', {day: 'numeric', month: 'long'})}
+                        </p>
+                    </div>
+                </a>
+            )
+        })}
+    </div>
+</div>

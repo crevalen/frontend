@@ -1,0 +1,111 @@
+---
+// src/components/SEO.astro
+import type { Post } from '../types';
+
+export interface Props {
+  title?: string;
+  description?: string;
+  ogType?: 'website' | 'article';
+  ogImage?: string | null;
+  post?: Post; // Untuk data terstruktur artikel
+  breadcrumbs?: { name: string; url: string }[];
+}
+
+const defaultTitle = 'Crevalen | Keuangan dan Investasi';
+const defaultDescription = 'Crevalen adalah Blog finansial dan investasi terpercaya. Tips realistis, strategi cerdas, dan panduan praktis membangun aset dari nol.';
+const defaultOgImage = new URL('/og-default.jpg', Astro.site).href; // Ganti dengan gambar default Anda di folder /public
+
+const { 
+  title = defaultTitle, 
+  description = defaultDescription,
+  ogType = 'website',
+  ogImage = defaultOgImage,
+  post,
+  breadcrumbs,
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const imageURL = ogImage ? new URL(ogImage, Astro.site).href : defaultOgImage;
+
+// Data Terstruktur (JSON-LD) untuk Google
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  'url': Astro.site,
+  'name': defaultTitle,
+  'description': defaultDescription,
+  'potentialAction': {
+    '@type': 'SearchAction',
+    'target': {
+      '@type': 'EntryPoint',
+      'urlTemplate': `${Astro.site}search?q={search_term_string}`
+    },
+    'query-input': 'required name=search_term_string'
+  }
+};
+
+const articleJsonLd = post ? {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    'mainEntityOfPage': {
+      '@type': 'WebPage',
+      '@id': canonicalURL.href,
+    },
+    'headline': post.title,
+    'description': post.excerpt || description,
+    'image': imageURL,
+    'author': {
+      '@type': 'Person',
+      'name': post.author?.name || 'Tim BlogKeren',
+    },
+    'publisher': {
+      '@type': 'Organization',
+      'name': 'BlogKeren',
+      'logo': {
+        '@type': 'ImageObject',
+        'url': new URL('/logo.png', Astro.site).href // Ganti dengan logo Anda di /public
+      }
+    },
+    'datePublished': post.date_published,
+    'dateModified': post.date_updated || post.date_published,
+  } : null;
+
+const breadcrumbJsonLd = breadcrumbs && breadcrumbs.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': breadcrumbs.map((crumb, index) => ({
+      '@type': 'ListItem',
+      'position': index + 1,
+      'name': crumb.name,
+      'item': crumb.url
+    }))
+} : null;
+
+
+---
+
+{/* Meta Tags Dasar */}
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonicalURL} />
+
+{/* Open Graph Tags (untuk Facebook, LinkedIn, dll.) */}
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonicalURL} />
+<meta property="og:image" content={imageURL} />
+<meta property="og:type" content={ogType} />
+<meta property="og:site_name" content="BlogKeren" />
+<meta property="og:locale" content="id_ID" />
+
+{/* Twitter Card Tags */}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={imageURL} />
+
+{/* Data Terstruktur JSON-LD */}
+<script type="application/ld+json" set:html={JSON.stringify(articleJsonLd || jsonLd)} />
+{breadcrumbJsonLd && (
+    <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd)} />
+)}

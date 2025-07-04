@@ -1,0 +1,97 @@
+---
+// src/components/ShareButtons.astro
+import type { Post } from '../types';
+
+interface Props {
+  postTitle: string;
+  postUrl: string;
+}
+
+const { postTitle, postUrl } = Astro.props;
+
+const encodedTitle = encodeURIComponent(postTitle);
+const encodedUrl = encodeURIComponent(postUrl);
+
+const shareLinks = {
+  facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+  twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
+  threads: `https://www.threads.net/intent/post?text=${encodedTitle}%0A${encodedUrl}`,
+  flipboard: `https://share.flipboard.com/bookmarklet/popout?v=2&title=${encodedTitle}&url=${encodedUrl}`,
+  tumblr: `https://www.tumblr.com/widgets/share/tool?posttype=link&canonicalUrl=${encodedUrl}&title=${encodedTitle}`,
+  email: `mailto:?subject=${encodedTitle}&body=Saya pikir Anda akan tertarik dengan artikel ini:%0A%0A${postUrl}`,
+};
+---
+<div class="mt-10 pt-8 border-t border-[var(--color-border)] dark:border-[var(--color-dark-border)]">
+    <h3 class="text-lg font-bold mb-4 text-center text-[var(--color-text)] dark:text-[var(--color-dark-text)]">
+        Bagikan Artikel Ini
+    </h3>
+    <div class="flex flex-wrap items-center justify-center gap-3">
+        {/* Tombol Facebook */}
+        <a href={shareLinks.facebook} target="_blank" rel="noopener noreferrer" title="Bagikan ke Facebook"
+           class="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-border)] dark:bg-[var(--color-dark-border)] text-[var(--color-secondary)] dark:text-[var(--color-dark-secondary)] hover:bg-[var(--color-facebook)] hover:text-white transition-all duration-300">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96A10 10 0 0 0 22 12.06C22 6.53 17.5 2.04 12 2.04Z"/></svg>
+        </a>
+
+        {/* Tombol Twitter */}
+        <a href={shareLinks.twitter} target="_blank" rel="noopener noreferrer" title="Bagikan ke Twitter"
+           class="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-border)] dark:bg-[var(--color-dark-border)] text-[var(--color-secondary)] dark:text-[var(--color-dark-secondary)] hover:bg-[var(--color-twitter)] hover:text-white transition-all duration-300">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M22.46,6C21.69,6.35 20.86,6.58 20,6.69C20.88,6.16 21.56,5.32 21.88,4.31C21.05,4.81 20.13,5.16 19.16,5.36C18.37,4.5 17.26,4 16,4C13.65,4 11.73,5.92 11.73,8.29C11.73,8.63 11.77,8.96 11.84,9.27C8.28,9.09 5.11,7.38 3,4.79C2.63,5.42 2.42,6.16 2.42,6.94C2.42,8.43 3.17,9.75 4.33,10.5C3.62,10.5 2.96,10.3 2.38,10C2.38,10 2.38,10 2.38,10.03C2.38,12.11 3.86,13.85 5.82,14.24C5.46,14.34 5.08,14.39 4.69,14.39C4.42,14.39 4.15,14.36 3.89,14.31C4.43,16 6,17.26 7.89,17.29C6.43,18.45 4.58,19.13 2.56,19.13C2.22,19.13 1.88,19.11 1.54,19.07C3.44,20.29 5.7,21 8.12,21C16,21 20.33,14.46 20.33,8.79C20.33,8.6 20.33,8.42 20.32,8.23C21.16,7.63 21.88,6.87 22.46,6Z"/></svg>
+        </a>
+
+        {/* Tombol Threads */}
+        <a href={shareLinks.threads} target="_blank" rel="noopener noreferrer" title="Bagikan ke Threads"
+           class="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-border)] dark:bg-[var(--color-dark-border)] text-[var(--color-secondary)] dark:text-[var(--color-dark-secondary)] hover:bg-[var(--color-threads)] hover:text-white transition-all duration-300">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M14.5,9.5a2.5,2.5,0,1,0-2.5-2.5A2.5,2.5,0,0,0,14.5,9.5Zm-5,0A2.5,2.5,0,1,0,7,7,2.5,2.5,0,0,0,9.5,9.5Zm11.08,2.75a8.32,8.32,0,0,0-1-3.24,8.44,8.44,0,0,0-2.22-2.22,8.32,8.32,0,0,0-3.24-1A8.2,8.2,0,0,0,12,5.25a8.14,8.14,0,0,0-2.12.39,8.32,8.32,0,0,0-3.24,1,8.44,8.44,0,0,0-2.22,2.22,8.32,8.32,0,0,0-1,3.24A8.2,8.2,0,0,0,3.25,12a8.14,8.14,0,0,0,.39,2.12,8.32,8.32,0,0,0,1,3.24,8.44,8.44,0,0,0,2.22,2.22,8.32,8.32,0,0,0,3.24,1,8.2,8.2,0,0,0,2.12.39,8.14,8.14,0,0,0,2.12-.39,8.32,8.32,0,0,0,3.24-1,8.44,8.44,0,0,0,2.22-2.22,8.32,8.32,0,0,0,1-3.24,8.2,8.2,0,0,0,.39-2.12A8.14,8.14,0,0,0,20.58,12.25Z"/></svg>
+        </a>
+
+        {/* Tombol Flipboard */}
+        <a href={shareLinks.flipboard} target="_blank" rel="noopener noreferrer" title="Bagikan ke Flipboard"
+           class="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-border)] dark:bg-[var(--color-dark-border)] text-[var(--color-secondary)] dark:text-[var(--color-dark-secondary)] hover:bg-[var(--color-flipboard)] hover:text-white transition-all duration-300">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h10v16H4V4m0-2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H4zm14 0h-2v10h2V4z"/></svg>
+        </a>
+
+        {/* Tombol Tumblr */}
+        <a href={shareLinks.tumblr} target="_blank" rel="noopener noreferrer" title="Bagikan ke Tumblr"
+           class="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-border)] dark:bg-[var(--color-dark-border)] text-[var(--color-secondary)] dark:text-[var(--color-dark-secondary)] hover:bg-[var(--color-tumblr)] hover:text-white transition-all duration-300">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M16.25,10.25h-2.5V7.75c0-1.07.75-1.12,1-1.12h1.5v-3h-3c-3.25,0-4.5,2.38-4.5,4.5v2.12h-2v3h2v8h3.5v-8h2.5c.67,0,1.13-.3,1.38-.75c.25-.45.25-1-.13-1.5Z"/></svg>
+        </a>
+
+        {/* Tombol Email */}
+        <a href={shareLinks.email} title="Bagikan via Email"
+           class="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-border)] dark:bg-[var(--color-dark-border)] text-[var(--color-secondary)] dark:text-[var(--color-dark-secondary)] hover:bg-[var(--color-email)] hover:text-white transition-all duration-300">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M4,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,11L20,6H4L12,11M20,18V8L12,13L4,8V18H20Z" /></svg>
+        </a>
+
+        {/* Tombol Copy Link */}
+        <button id="copy-link-btn" title="Salin Link"
+                class="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-border)] dark:bg-[var(--color-dark-border)] text-[var(--color-secondary)] dark:text-[var(--color-dark-secondary)] hover:bg-green-600 hover:text-white transition-all duration-300">
+            <svg class="w-6 h-6" id="copy-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z" /></svg>
+            <span id="copy-feedback" class="hidden text-xs font-bold">Disalin!</span>
+        </button>
+    </div>
+</div>
+
+<script define:vars={{ postUrl }}>
+    const copyBtn = document.getElementById('copy-link-btn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(postUrl).then(() => {
+                const icon = document.getElementById('copy-icon');
+                const feedback = document.getElementById('copy-feedback');
+                
+                if (icon && feedback) {
+                    icon.classList.add('hidden');
+                    feedback.classList.remove('hidden');
+
+                    setTimeout(() => {
+                        icon.classList.remove('hidden');
+                        feedback.classList.add('hidden');
+                    }, 2000);
+                }
+            }).catch(err => {
+                console.error('Gagal menyalin link:', err);
+                alert('Gagal menyalin link ke clipboard.');
+            });
+        });
+    }
+</script>

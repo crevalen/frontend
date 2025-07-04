@@ -1,16 +1,103 @@
 ---
+// src/pages/index.astro
+
+import directus from '../lib/directus.js';
+import { readItems, aggregate } from '@directus/sdk';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ArticleCard from '../components/ArticleCard.astro';
+import FeaturedPostCard from '../components/FeaturedPostCard.astro';
+import PopularPostsWidget from '../components/PopularPostsWidget.astro';
+import LoadMore from '../components/LoadMore.astro'; // Komponen script kita
+import type { Post } from '../types';
+
+
+export const prerender = true;
+
+const POSTS_PER_PAGE = 6;
+
+// Ambil 1 artikel terbaru untuk featured
+const featuredPostResponse = (await directus.request(readItems('posts', {
+    sort: ['-date_published'],
+    limit: 1,
+    fields: ['*', 'featured_image.id',
+      'featured_image.filename_disk',
+      'category.name',
+      'category.slug']
+}))) as Post[];
+const featuredPost = featuredPostResponse[0];
+
+// Ambil 5 artikel terpopuler
+const popularPosts = (await directus.request(readItems('posts', {
+    sort: ['-view_count'],
+    limit: 5,
+    fields: [
+      'slug',
+      'title',
+      'date_published',
+      'featured_image.id',
+      'featured_image.filename_disk',
+      'category.name',
+      'category.slug'
+    ]
+}))) as Post[];
+// Ambil 6 post pertama untuk grid awal
+const initialGridPosts = (await directus.request(readItems('posts', {
+    sort: ['-date_published'],
+    offset: 1, // Lewati 1 post yang sudah jadi featured
+    limit: POSTS_PER_PAGE,
+    fields: ['slug', 'title', 'date_published', 'featured_image.id', 'featured_image.filename_disk', 'category.name', 'category.slug']
+}))) as Post[];
+
+// Hitung total semua post untuk logika "Load More"
+const postsCountAggregate = await directus.request(aggregate('posts', { aggregate: { count: '*' } }));
+const totalPosts = Number(postsCountAggregate[0].count) - 1; // Kurangi 1 untuk featured post
+
+
 
 ---
+<BaseLayout 
+  title="Crevalen|Keuangan dan Investasi"
+  description="Crevalen adalah Blog finansial dan investasi terpercaya. Tips realistis, strategi cerdas, dan panduan praktis membangun aset dari nol."
+>
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+    <div class="max-w-[1040px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+        <section class="grid grid-cols-1 lg:grid-cols-3 lg:gap-x-12 gap-y-12 mb-16">
+            <div class="lg:col-span-2">
+                <FeaturedPostCard post={featuredPost} />
+            </div>
+            <div class="lg:col-span-1">
+                <PopularPostsWidget posts={popularPosts} />
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-3xl font-bold font-sans mb-8 border-b-2 border-primary inline-block pb-2">
+                Artikel Lainnya
+            </h2>
+            
+            <div id="posts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {initialGridPosts.map(post => (
+                    <ArticleCard post={post} />
+                ))}
+            </div>
+
+            <div id="load-more-container" class="text-center mt-12 pt-8 border-t border-border dark:border-dark-border">
+<button 
+    id="load-more-btn" 
+    class="bg-transparent border-2 border-[var(--color-primary)] text-[var(--color-primary)] font-bold py-3 px-8 rounded-lg 
+           hover:bg-[var(--color-primary)] hover:text-[var(--color-primary-text)] 
+           transition-colors duration-300 ease-in-out">
+    Muat Lebih Banyak
+</button>
+            </div>
+        </section>
+        
+    </div>
+
+    <LoadMore
+        totalPosts={totalPosts}
+        postsPerPage={POSTS_PER_PAGE}
+        initialPostsCount={initialGridPosts.length}
+    />
+</BaseLayout>

@@ -1,0 +1,50 @@
+---
+// src/components/ArticleCard.astro
+import type { Post } from '../types';
+
+const { post } = Astro.props as { post: Post };
+const directusUrl = import.meta.env.PUBLIC_DIRECTUS_URL;
+
+const formattedDate = new Date(post.date_published).toLocaleDateString('id-ID', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+});
+
+const imageUrl = post.featured_image 
+    ? `https://hddoosyogucukctznlog.supabase.co/storage/v1/object/public/asset/${post.featured_image.filename_disk}` 
+    : '/placeholder.jpg';
+const postUrl = `/${post.category?.slug}/${post.slug}`;
+---
+<div class="bg-[var(--color-card)] dark:bg-[var(--color-dark-card)] border border-[var(--color-border)] dark:border-[var(--color-dark-border)] rounded-xl overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
+
+    
+    {imageUrl && 
+        <a href={postUrl} class="aspect-video overflow-hidden block">
+            <img 
+                src={imageUrl} 
+                alt={`Gambar untuk artikel ${post.title}`} 
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+        </a>
+    }
+
+    <div class="p-6 flex flex-col flex-grow">
+        <div class="flex items-center gap-4 text-xs font-sans mb-3">
+            {post.category && 
+                <a href={`/categories/${post.category.slug}`} class="text-primary dark:text-dark-primary font-bold uppercase hover:underline">
+                    {post.category.name}
+                </a>
+            }
+            {/* Menampilkan Tanggal Publikasi, Waktu Baca Dihapus */}
+            <span class="text-secondary dark:text-dark-secondary">{formattedDate}</span>
+        </div>
+
+        {/* Judul sebagai Link */}
+        <h3 class="font-sans text-xl font-bold text-text dark:text-dark-text mt-auto">
+            <a href={postUrl} class="hover:text-primary dark:hover:text-dark-primary transition-colors">
+                {post.title}
+            </a>
+        </h3>
+    </div>
+</div>

@@ -1,0 +1,65 @@
+{/* src/components/ReadingProgress.astro */}
+<div id="progress-container" class="fixed top-0 left-0 w-full h-1.5 z-50 pointer-events-none">
+  <div id="progress-bar" class="h-full bg-blue-800" style="width: 0%;"></div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const header = document.getElementById('main-header');
+    const article = document.getElementById('main-article');
+    const progressBar = document.getElementById('progress-bar');
+    
+    // Jika bukan halaman artikel atau elemen tidak ditemukan, hentikan script
+    if (!article || !header || !progressBar) {
+        return;
+    }
+
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+        // === 1. Logika Progress Bar ===
+        const articleRect = article.getBoundingClientRect();
+        const articleHeight = article.scrollHeight;
+        const viewportHeight = window.innerHeight;
+
+        // Seberapa jauh kita sudah scroll di dalam artikel
+        // Dimulai saat bagian atas artikel mencapai bagian atas layar
+        const scrollInArticle = Math.max(0, -articleRect.top);
+        
+        // Total ketinggian yang bisa di-scroll di dalam artikel
+        const totalScrollableHeight = articleHeight - viewportHeight;
+        
+        let progress = 0;
+        if (totalScrollableHeight > 0) {
+            progress = (scrollInArticle / totalScrollableHeight) * 100;
+        }
+
+        // Batasi progress antara 0 dan 100
+        progress = Math.min(100, Math.max(0, progress));
+        progressBar.style.width = `${progress}%`;
+
+
+        // === 2. Logika Sembunyikan/Tampilkan Header ===
+        const currentScrollY = window.scrollY;
+
+        // Sembunyikan header jika scroll ke bawah dan sudah melewati tinggi header
+        if (currentScrollY > lastScrollY && currentScrollY > header.offsetHeight) {
+            header.classList.add('-translate-y-full', 'transition-transform', 'duration-300');
+        } 
+        // Tampilkan header jika scroll ke atas
+        else if (currentScrollY < lastScrollY) {
+            header.classList.remove('-translate-y-full');
+        }
+        
+        // Update posisi scroll terakhir
+        lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Membersihkan event listener saat halaman ditinggalkan
+    document.addEventListener('astro:before-swap', () => {
+        window.removeEventListener('scroll', handleScroll);
+    }, { once: true });
+});
+</script>

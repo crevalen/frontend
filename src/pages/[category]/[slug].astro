@@ -1,0 +1,198 @@
+---
+// src/pages/[category]/[slug].astro
+import directus from '../../lib/directus.js';
+import { readItems } from '@directus/sdk';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import type { Post, Comment } from '../../types';
+import CommentSection from '../../components/CommentSection.astro';
+import CommentForm from '../../components/CommentForm.tsx';
+import ShareButtons from '../../components/ShareButtons.astro';
+import RelatedArticles from '../../components/RelatedArticles.astro';
+import { Image } from 'astro:assets';
+
+export const prerender = false;
+
+export async function getStaticPaths() {
+    const posts = await directus.request(readItems('posts', {
+        fields: ['slug', 'category.slug']
+    }));
+
+    return posts
+      .filter(post => post.category?.slug && post.slug)
+      .map((post) => ({
+        params: {
+            category: post.category.slug,
+            slug: post.slug,
+        },
+    }));
+}
+
+const { slug } = Astro.params;
+
+const post = (await directus.request(readItems('posts', {
+    filter: { slug: { _eq: slug } },
+    limit: 1,
+    fields: ['*', 'featured_image.id', 'featured_image.width', 'featured_image.height','featured_image.filename_disk', 'category.*', 'author.*', 'tags.tags_id.*', 'seo_meta']
+})))[0] as Post;
+
+let allComments: Comment[] = [];
+if (post) {
+    allComments = (await directus.request(readItems('comments', {
+        filter: { post: { _eq: post.id }, status: { _eq: "published" } },
+        sort: ['date_created'],
+        fields: ['*', 'parent.id'] 
+    }))) as Comment[];
+}
+
+// FUNGSI PENTING UNTUK MEMBUAT STRUKTUR BERSARANG
+function buildCommentTree(comments: Comment[]): Comment[] {
+    type CommentWithReplies = Comment & { replies: CommentWithReplies[] };
+    const commentMap = new Map<number, CommentWithReplies>();
+    comments.forEach(comment => {
+        commentMap.set(comment.id, { ...comment, replies: [] });
+    });
+    const tree: CommentWithReplies[] = [];
+    commentMap.forEach(comment => {
+        if (comment.parent && commentMap.has(comment.parent.id)) {
+            commentMap.get(comment.parent.id)!.replies.push(comment);
+        } else {
+            tree.push(comment);
+        }
+    });
+    return tree;
+}
+
+const commentTree = buildCommentTree(allComments);
+
+
+
+const formattedDate = new Date(post.date_published).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+const imageUrl = `https://hddoosyogucukctznlog.supabase.co/storage/v1/object/public/asset/${post.featured_image.filename_disk}`;
+const authorImageUrl = post.author?.avatar ? `http://localhost:8055/assets/${post.author.avatar}` : null;
+const directusUrl = "directus-backend-production-bf8e.up.railway.app";
+const seoDescription = 
+    post.seo_meta ||                                            
+    post.excerpt ||                                             
+    post.content.replace(/<[^>]+>/g, '').slice(0, 155) + '...';
+
+ 
+const breadcrumbsData = [
+    { name: 'Beranda', url: new URL('/', Astro.site).href },
+    { name: post.category.name, url: new URL(`/kategori/${post.category.slug}`, Astro.site).href },
+    { name: post.title, url: Astro.url.href } 
+
+];    
+---
+<BaseLayout 
+  title={`${post.title} | Crevalen`}
+  description={seoDescription}
+  ogImage={imageUrl}
+  ogType="article"
+  post={post}
+  breadcrumbs={breadcrumbsData}
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <article id="main-article" class="max-w-4xl mx-auto py-12">
+      <header class="text-center mb-12">
+        <nav aria-label="Breadcrumb" class="flex justify-center text-sm font-sans mb-4 text-[var(--color-secondary)]">
+          <ol class="flex items-center space-x-2 flex-wrap">
+            <li><a href="/" class="hover:text-[var(--color-primary)]">Beranda</a></li>
+            <li><span class="mx-2">/</span></li>
+            {post.category && <li><a href={`/categories/${post.category.slug}`} class="hover:text-[var(--color-primary)]">{post.category.name}</a></li>}
+            <li><span class="mx-2">/</span></li>
+            <li aria-current="page" class="font-medium text-[var(--color-text)] truncate max-w-[150px] sm:max-w-none">{post.title}</li>
+          </ol>
+        </nav>
+
+        <h1 class="text-4xl md:text-5xl font-bold font-sans mt-4 text-[var(--color-text)]">{post.title}</h1>
+
+        <div class="flex items-center justify-center flex-wrap gap-x-4 gap-y-2 mt-6">
+          {post.author && (
+            <div class="flex items-center gap-2">
+              {authorImageUrl && (
+                <img src={authorImageUrl} alt={post.author.name} class="w-8 h-8 rounded-full object-cover" />
+              )}
+              <span class="font-sans text-sm font-medium text-[var(--color-text)]">{post.author.name}</span>
+            </div>
+          )}
+          {post.author && <span class="text-[var(--color-secondary)] hidden sm:inline">&bull;</span>}
+          <span class="font-sans text-sm text-[var(--color-secondary)]">{formattedDate}</span>
+          <span class="text-[var(--color-secondary)] hidden sm:inline">&bull;</span>
+          <span class="font-sans text-sm text-[var(--color-secondary)]">Waktu Baca: {post.reading_time} Menit</span>
+        </div>
+      </header>
+
+      {post.featured_image && post.featured_image.width && post.featured_image.height && (
+        <img 
+          src={`https://hddoosyogucukctznlog.supabase.co/storage/v1/object/public/asset/${post.featured_image.filename_disk}`} 
+          width={post.featured_image.width}
+          height={post.featured_image.height}
+          alt={`Gambar utama untuk ${post.title}`}
+          class="w-full aspect-video object-cover rounded-xl mb-12"
+          loading="lazy"
+        />
+      )}
+
+      <div class="prose prose-lg dark:prose-invert max-w-none mx-auto">
+        <div set:html={post.content} />
+      </div>
+
+      {post.tags && post.tags.length > 0 && (
+        <footer class="mt-12 pt-8 border-t border-[var(--color-border)] dark:border-[var(--color-dark-border)]">
+          <h3 class="font-sans font-bold text-lg mb-4 text-[var(--color-text)] dark:text-[var(--color-dark-text)]">
+            Topik Terkait
+          </h3>
+          <div class="flex flex-wrap gap-3">
+            {post.tags.map(tag => (
+              <a 
+                href={`/tags/${tag.slug}`}
+                class="inline-block bg-[var(--color-border)] dark:bg-[var(--color-dark-border)] px-4 py-1.5 rounded-full text-sm font-semibold text-[var(--color-secondary)] dark:text-[var(--color-dark-secondary)] hover:bg-[var(--color-primary)] hover:text-[var(--color-primary-text)] dark:hover:text-[var(--color-primary-text)] transition-colors duration-200"
+              >
+                # {tag.name}
+              </a>
+            ))}
+          </div>
+        </footer>
+      )}
+
+      <ShareButtons postUrl={Astro.url.href} postTitle={post.title} />
+      <RelatedArticles categoryId={post.category.id} currentPostId={post.id} />
+    </article>
+
+    <section class="max-w-4xl mx-auto mt-12 py-12 border-t border-[var(--color-border)]">
+      <h2 class="text-3xl font-bold font-sans mb-8">Diskusi ({allComments.length || 0} Komentar)</h2>
+      <div class="space-y-8">
+        <CommentSection comments={commentTree} postID={post.id} />
+        <h3 class="text-2xl font-bold font-sans pt-8 border-t border-[var(--color-border)]">Tinggalkan Komentar</h3>
+        <CommentForm postID={post.id} client:visible /> 
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<script define:vars={{ slug }}>
+  // Skrip ini berjalan di browser pengunjung
+  async function incrementView() {
+    try {
+      console.log(`[Client] Mencoba menambah view untuk slug: ${slug}`);
+      
+      const response = await fetch(`/api/views/${slug}`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        console.error(`[Client] Gagal memanggil API. Status: ${response.status}`);
+        return;
+      }
+
+      const data = await response.json();
+      console.log(`[Client] Sukses! View count sekarang: ${data.views}`);
+
+    } catch (error) {
+      console.error('[Client] Terjadi error saat fetch API:', error);
+    }
+  }
+
+  // Panggil fungsi saat halaman selesai dimuat
+  document.addEventListener('DOMContentLoaded', incrementView);
+</script>

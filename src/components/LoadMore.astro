@@ -1,0 +1,108 @@
+---
+// src/components/LoadMore.astro
+
+interface Props {
+    totalPosts: number;
+    postsPerPage: number;
+    initialPostsCount: number;
+}
+const { totalPosts, postsPerPage, initialPostsCount } = Astro.props;
+
+// 1. Baca URL Directus di sini (sisi server)
+const directusUrl = import.meta.env.PUBLIC_DIRECTUS_URL;
+---
+
+<script define:vars={{ totalPosts, postsPerPage, initialPostsCount, directusUrl }}>
+    document.addEventListener('DOMContentLoaded', () => {
+        const createPostCardHTML = (post) => {
+            const date = new Date(post.date_published);
+            const formattedDate = !isNaN(date.getTime()) 
+                ? date.toLocaleDateString('id-ID', {
+                    year: 'numeric', month: 'long', day: 'numeric'
+                  })
+                : 'Tanggal tidak valid';
+
+            const imageUrl = post.featured_image ? `${directusUrl}/assets/${post.featured_image.id}` : '/placeholder.jpg';
+            
+            return `
+                <article class="flex flex-col bg-white dark:bg-dark-card rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <a href="/${post.slug}/" class="block">
+                        <img src="${imageUrl}" alt="Gambar untuk ${post.title}" class="w-full h-48 object-cover">
+                    </a>
+                    <div class="p-5 flex flex-col flex-grow">
+                        <div class="mb-3">
+                            <a href="/category/${post.category.slug}/" class="text-sm font-semibold text-primary hover:underline">
+                                ${post.category.name}
+                            </a>
+                        </div>
+                        <h3 class="text-xl font-bold font-sans mb-2 flex-grow">
+                            <a href="/${post.slug}/" class="text-text dark:text-dark-text hover:text-primary dark:hover:text-primary transition-colors duration-300">
+                                ${post.title}
+                            </a>
+                        </h3>
+                        <time datetime="${post.date_published}" class="text-sm text-secondary dark:text-dark-secondary">
+                            ${formattedDate}
+                        </time>
+                    </div>
+                </article>
+            `;
+        };
+
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        const postsGrid = document.getElementById('posts-grid');
+        const loadMoreContainer = document.getElementById('load-more-container');
+
+        if (!loadMoreBtn || !postsGrid || !loadMoreContainer) {
+            console.error("Elemen penting tidak ditemukan.");
+            return;
+        }
+
+        let loadedPostsCount = initialPostsCount;
+        
+        // --- BARIS YANG PERLU DITAMBAHKAN ---
+        let currentPage = 1;
+        // ------------------------------------
+
+        if (loadedPostsCount >= totalPosts) {
+            loadMoreContainer.style.display = 'none';
+        }
+
+        loadMoreBtn.addEventListener('click', async () => {
+            // `currentPage` sekarang sudah didefinisikan, jadi `fetch` akan meminta halaman yang benar
+            const nextPage = currentPage + 1;
+
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.textContent = 'Memuat...';
+
+            try {
+                const response = await fetch(`/api/posts.json?page=${nextPage}&limit=${postsPerPage}`);
+                if (!response.ok) throw new Error('Gagal mengambil data');
+                
+                const newPosts = await response.json();
+
+                if (newPosts.length > 0) {
+                    let postsHTML = '';
+                    newPosts.forEach(post => {
+                        postsHTML += createPostCardHTML(post);
+                        loadedPostsCount++;
+                    });
+                    postsGrid.insertAdjacentHTML('beforeend', postsHTML);
+                    currentPage = nextPage; // Update halaman saat ini setelah berhasil
+                }
+
+                if (newPosts.length < postsPerPage || loadedPostsCount >= totalPosts) {
+                    loadMoreContainer.style.display = 'none';
+                }
+
+            } catch (error) {
+                console.error('Gagal memuat postingan:', error);
+                loadMoreBtn.textContent = 'Gagal Memuat';
+            } finally {
+                loadMoreBtn.disabled = false;
+                if (loadMoreContainer.style.display !== 'none') {
+                     loadMoreBtn.textContent = 'Muat Lebih Banyak';
+                }
+            }
+        });
+    });
+</script>

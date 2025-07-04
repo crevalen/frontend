@@ -1,0 +1,45 @@
+---
+import directus from '../lib/directus';
+import { readItems } from '@directus/sdk';
+import ArticleCard from './ArticleCard.astro';
+import type { Post } from '../types';
+
+interface Props {
+  categoryId: number;
+  currentPostId: number;
+}
+
+const { categoryId, currentPostId } = Astro.props;
+
+const relatedPosts = await directus.request(readItems('posts', {
+  filter: {
+    _and: [
+      { category: { _eq: categoryId } },
+      { id: { _neq: currentPostId } }
+    ]
+  },
+  fields: [
+    'title',
+    'slug',
+    'date_published',
+    'featured_image.id',
+    'featured_image.filename_disk',
+    'category.name',
+    'category.slug'
+  ],
+  limit: 6,
+  sort: ['-date_published']
+})) as Post[];
+---
+{relatedPosts && relatedPosts.length > 0 && (
+  <section class="mt-16 pt-8 border-t border-[var(--color-border)] dark:border-[var(--color-dark-border)]">
+    <h2 class="text-3xl font-bold font-sans mb-8 text-center text-[var(--color-text)] dark:text-[var(--color-dark-text)]">
+      Artikel Terkait Lainnya
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {relatedPosts.map(post => (
+        <ArticleCard post={post} />
+      ))}
+    </div>
+  </section>
+)}

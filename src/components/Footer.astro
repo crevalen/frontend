@@ -1,0 +1,31 @@
+---
+// src/components/Footer.astro
+import directus from '../lib/directus.js';
+import { readItems } from '@directus/sdk';
+
+// 1. Ambil data halaman yang sama seperti di TopHeader
+const navLinks = await directus.request(readItems('pages', {
+    filter: { status: { _eq: "published" } },
+    fields: ['title', 'slug']
+}));
+
+const currentYear = new Date().getFullYear();
+---
+{/* 2. Gunakan class Tailwind untuk styling */}
+<footer class="text-center mt-12 py-10 px-4 bg-[var(--color-card)] dark:bg-[var(--color-dark-card)] border-t border-[var(--color-border)] dark:border-[var(--color-dark-border)]">
+    
+    <nav class="flex flex-wrap justify-center items-center gap-x-6 gap-y-2 mb-8" aria-label="Navigasi Footer">
+        {navLinks.map(link => (
+            <a 
+                href={`/${link.slug}`} 
+                class="text-sm font-semibold text-[var(--color-secondary)] dark:text-[var(--color-dark-secondary)] hover:text-[var(--color-primary)] dark:hover:text-[var(--color-dark-primary)] hover:underline transition-colors"
+            >
+                {link.title}
+            </a>
+        ))}
+    </nav>
+    
+    <p class="text-sm text-[var(--color-secondary)]/80 dark:text-[var(--color-dark-secondary)]/80">
+        &copy; {currentYear} Crevalen. Hak Cipta Dilindungi Undang Undang.
+    </p>
+</footer>

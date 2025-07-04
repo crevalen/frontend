@@ -1,0 +1,66 @@
+---
+// src/pages/404.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="404: Halaman Tidak Ditemukan">
+    <div class="flex flex-col items-center justify-center text-center min-h-[70vh] py-20 px-4 sm:px-6">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-24 h-24 text-blue-500/80 dark:text-blue-400/80 mb-4">
+            <path d="M11.9998 10C11.9998 10.5523 11.5521 11 10.9998 11C10.4476 11 9.99984 10.5523 9.99984 10C9.99984 9.44772 10.4476 9 10.9998 9C11.5521 9 11.9998 9.44772 11.9998 10Z"></path>
+            <path d="M13.9998 11C14.5521 11 14.9998 10.5523 14.9998 10C14.9998 9.44772 14.5521 9 13.9998 9C13.4476 9 12.9998 9.44772 12.9998 10C12.9998 10.5523 13.4476 11 13.9998 11Z"></path>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.47715 2 2 6.47715 2 12C2 16.714 5.28571 20.9429 10 21.8143V22H14V21.8143C18.7143 20.9429 22 16.714 22 12C22 6.47715 17.5228 2 12 2ZM8 12C8 14.2091 9.79086 16 12 16C14.2091 16 16 14.2091 16 12V8H8V12ZM18 12C18 16.4183 14.4183 20 10 20C9.44771 20 9 19.5523 9 19C9 18.4477 9.44772 18 10 18C13.3137 18 16 15.3137 16 12C16 8.68629 13.3137 6 10 6C9.44771 6 9 5.55228 9 5C9 4.44772 9.44772 4 10 4C14.4183 4 18 7.58172 18 12Z"></path>
+        </svg>
+
+        <h1 class="text-6xl md:text-7xl font-bold font-sans text-[var(--color-text)] dark:text-[var(--color-dark-text)]">
+            Oops!
+        </h1>
+        <h2 class="mt-2 text-2xl md:text-3xl font-semibold font-sans text-[var(--color-secondary)] dark:text-[var(--color-dark-secondary)]">
+            Halaman Tidak Ditemukan
+        </h2>
+        <p class="mt-6 max-w-md text-lg text-[var(--color-secondary)] dark:text-[var(--color-dark-secondary)]">
+            Sepertinya Anda tersesat. Mari kita cari jalan pulang atau temukan sesuatu yang baru.
+        </p>
+
+        <div class="w-full max-w-sm mt-10">
+            {/* Form pencarian kini menggunakan HTML standar */}
+            <form id="search-form" class="relative">
+                <input
+                    id="search-input"
+                    type="search"
+                    name="q"
+                    placeholder="Cari di blog ini..."
+                    class="w-full pl-5 pr-14 py-3 text-base rounded-full border border-[var(--color-border)] dark:border-[var(--color-dark-border)] 
+                           bg-[var(--color-card)] dark:bg-[var(--color-dark-card)]
+                           focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-shadow"
+                />
+                <button 
+                    type="submit" 
+                    class="absolute right-1.5 top-1/2 -translate-y-1/2 bg-[var(--color-primary)] hover:opacity-90 text-white rounded-full p-2 transition-opacity"
+                    aria-label="Cari"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                </button>
+            </form>
+            <p class="mt-6 text-base text-[var(--color-secondary)] dark:text-[var(--color-dark-secondary)]">
+                Atau, <a href="/" class="font-semibold text-[var(--color-primary)] hover:underline">kembali ke Beranda</a>.
+            </p>
+        </div>
+    </div>
+</BaseLayout>
+
+<script>
+    // Script ini menggunakan JavaScript standar, bukan React
+    const searchForm = document.getElementById('search-form');
+    const searchInput = document.getElementById('search-input') as HTMLInputElement;
+
+    if (searchForm && searchInput) {
+        searchForm.addEventListener('submit', (event) => {
+            event.preventDefault(); // Mencegah form dari reload halaman
+            const query = searchInput.value.trim();
+            if (query) {
+                // Arahkan ke halaman pencarian dengan query
+                window.location.href = `/search?q=${encodeURIComponent(query)}`;
+            }
+        });
+    }
+</script>

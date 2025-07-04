@@ -1,0 +1,61 @@
+---
+// src/pages/arsip.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+import directus from '../lib/directus';
+import { readItems } from '@directus/sdk';
+import type { Post } from '../types';
+
+export const prerender = false;
+
+// Ambil semua post, hanya field yang dibutuhkan
+const allPosts = await directus.request(readItems('posts', {
+    fields: ['title', 'slug', 'date_published', 'category.slug'],
+    sort: ['-date_published'],
+    limit: -1 // Ambil semua
+})) as Post[];
+
+// Kelompokkan post berdasarkan Bulan dan Tahun
+const groupedPosts = allPosts.reduce((acc, post) => {
+    const date = new Date(post.date_published);
+    const key = date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+    if (!acc[key]) {
+        acc[key] = [];
+    }
+    acc[key].push(post);
+    return acc;
+}, {} as Record<string, Post[]>);
+---
+<BaseLayout title="Arsip Artikel">
+    <div class="max-w-4xl mx-auto py-12 px-4">
+        <header class="text-center mb-12">
+            <h1 class="text-5xl font-bold font-sans">Arsip Artikel</h1>
+            <p class="mt-4 text-lg text-[var(--color-secondary)]">
+                Semua artikel yang pernah dipublikasikan.
+            </p>
+        </header>
+
+        <div class="space-y-12">
+            {Object.entries(groupedPosts).map(([groupTitle, postsInGroup]) => (
+                <section>
+                    <h2 class="text-2xl font-bold font-sans pb-4 mb-6 border-b-2 border-[var(--color-primary)] inline-block">
+                        {groupTitle}
+                    </h2>
+                    <ul class="space-y-4">
+                        {postsInGroup.map(post => (
+                            <li>
+                                <a href={`/${post.category.slug}/${post.slug}`} class="group block">
+                                    <h3 class="text-xl font-semibold text-[var(--color-text)] dark:text-[var(--color-dark-text)] group-hover:text-[var(--color-primary)] transition-colors">
+                                        {post.title}
+                                    </h3>
+                                    <time class="text-sm text-[var(--color-secondary)]">
+                                        {new Date(post.date_published).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                    </time>
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+            ))}
+        </div>
+    </div>
+</BaseLayout>

@@ -1,0 +1,40 @@
+---
+// src/pages/[slug].astro
+export const prerender = true; 
+import directus from '../lib/directus.js';
+import { readItems } from '@directus/sdk';
+import BaseLayout from '../layouts/BaseLayout.astro';
+ 
+
+
+
+export async function getStaticPaths() {
+    const pages = await directus.request(readItems('pages', {
+        filter: { status: { _eq: "published" } },
+        fields: ['slug']
+    }));
+    return pages.map((page) => ({
+        params: { slug: page.slug },
+    }));
+}
+
+const { slug } = Astro.params;
+
+const pageResponse = await directus.request(readItems('pages', {
+    filter: { slug: { _eq: slug } },
+    limit: 1
+}));
+const page = pageResponse[0];
+---
+<BaseLayout title={page.title}>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto py-12 md:py-16">
+            <header class="text-center mb-12">
+                <h1 class="text-4xl md:text-5xl font-bold font-sans">{page.title}</h1>
+            </header>
+            <div class="prose prose-lg dark:prose-invert max-w-none mx-auto">
+                <div set:html={page.content} />
+            </div>
+        </div>
+    </div>
+</BaseLayout>
