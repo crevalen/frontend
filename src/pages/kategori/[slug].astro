@@ -27,7 +27,7 @@ const category = categories[0];
 const posts = (await directus.request(readItems('posts', {
     filter: { category: { slug: { _eq: slug } } },
     sort: ['-date_published'],
-    fields: ['title', 'slug', 'date_published', 'featured_image.id', 'category.name', 'category.slug']
+    fields: ['title', 'slug', 'date_published', 'featured_image.id', 'featured_image.filename_disk', 'category.name', 'category.slug']
 }))) as Post[];
 ---
 <BaseLayout title={`Kategori: ${category.name}`}>

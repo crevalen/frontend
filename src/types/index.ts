@@ -2,6 +2,7 @@
 
 // Cetak biru untuk satu Tag
 export interface Tag {
+  id: number;
   name: string;
   slug: string;
 }
@@ -54,7 +55,8 @@ export interface Post {
   featured_image: FeaturedImage;
   category: Category;
   author: Author;
-  tags: Tag[];
+  tags: {
+   tags_id: Tag; }[];
   comments: Comment[]; 
   seo_meta?: string;
   excerpt?: string;

@@ -1,5 +1,4 @@
 ---
-// src/pages/[category]/[slug].astro
 export const prerender = true;
 import directus from '../../lib/directus.js';
 import { readItems } from '@directus/sdk';
@@ -11,79 +10,91 @@ import ShareButtons from '../../components/ShareButtons.astro';
 import RelatedArticles from '../../components/RelatedArticles.astro';
 import { Image } from 'astro:assets';
 
-
-
 export async function getStaticPaths() {
-    const posts = await directus.request(readItems('posts', {
-        fields: ['slug', 'category.slug']
-    }));
+  const posts = await directus.request(readItems('posts', {
+    fields: ['slug', 'category.slug']
+  }));
 
-    return posts
-      .filter(post => post.category?.slug && post.slug)
-      .map((post) => ({
-        params: {
-            category: post.category.slug,
-            slug: post.slug,
-        },
+  return posts
+    .filter(post => post.category?.slug && post.slug)
+    .map((post) => ({
+      params: {
+        category: post.category.slug,
+        slug: post.slug,
+      },
     }));
 }
 
 const { slug } = Astro.params;
 
 const post = (await directus.request(readItems('posts', {
-    filter: { slug: { _eq: slug } },
-    limit: 1,
-    fields: ['*', 'featured_image.id', 'featured_image.width', 'featured_image.height','featured_image.filename_disk', 'category.*', 'author.*', 'tags.tags_id.*', 'seo_meta']
+  filter: { slug: { _eq: slug } },
+  limit: 1,
+  fields: [
+    '*',
+    'featured_image.id',
+    'featured_image.width',
+    'featured_image.height',
+    'featured_image.filename_disk',
+    'category.*',
+    'author.*',
+      'tags.id',
+  'tags.tags_id.id',
+  'tags.tags_id.name',
+  'tags.tags_id.slug',
+
+  ]
 })))[0] as Post;
+
+// 🔧 FLATTEN TAGS
+const tags = post.tags?.map(tag => tag.tags_id) || [];
 
 let allComments: Comment[] = [];
 if (post) {
-    allComments = (await directus.request(readItems('comments', {
-        filter: { post: { _eq: post.id }, status: { _eq: "published" } },
-        sort: ['date_created'],
-        fields: ['*', 'parent.id'] 
-    }))) as Comment[];
+  allComments = (await directus.request(readItems('comments', {
+    filter: { post: { _eq: post.id }, status: { _eq: "published" } },
+    sort: ['date_created'],
+    fields: ['*', 'parent.id']
+  }))) as Comment[];
 }
 
-// FUNGSI PENTING UNTUK MEMBUAT STRUKTUR BERSARANG
 function buildCommentTree(comments: Comment[]): Comment[] {
-    type CommentWithReplies = Comment & { replies: CommentWithReplies[] };
-    const commentMap = new Map<number, CommentWithReplies>();
-    comments.forEach(comment => {
-        commentMap.set(comment.id, { ...comment, replies: [] });
-    });
-    const tree: CommentWithReplies[] = [];
-    commentMap.forEach(comment => {
-        if (comment.parent && commentMap.has(comment.parent.id)) {
-            commentMap.get(comment.parent.id)!.replies.push(comment);
-        } else {
-            tree.push(comment);
-        }
-    });
-    return tree;
+  type CommentWithReplies = Comment & { replies: CommentWithReplies[] };
+  const commentMap = new Map<number, CommentWithReplies>();
+  comments.forEach(comment => {
+    commentMap.set(comment.id, { ...comment, replies: [] });
+  });
+  const tree: CommentWithReplies[] = [];
+  commentMap.forEach(comment => {
+    if (comment.parent && commentMap.has(comment.parent.id)) {
+      commentMap.get(comment.parent.id)!.replies.push(comment);
+    } else {
+      tree.push(comment);
+    }
+  });
+  return tree;
 }
 
 const commentTree = buildCommentTree(allComments);
 
+const formattedDate = new Date(post.date_published).toLocaleDateString('id-ID', {
+  year: 'numeric', month: 'long', day: 'numeric'
+});
+const imageUrl = `https://pub-9dc5be99bc6d43cb9b0a439ff54242d7.r2.dev/${post.featured_image.filename_disk}`;
+const authorImageUrl = `https://pub-9dc5be99bc6d43cb9b0a439ff54242d7.r2.dev/62108a67-e2b6-46d5-8ce0-b36b15d7a512.svg`;
 
+const seoDescription =
+  post.seo_meta ||
+  post.excerpt ||
+  post.content.replace(/<[^>]+>/g, '').slice(0, 155) + '...';
 
-const formattedDate = new Date(post.date_published).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-const imageUrl = `https://pub-9dc5be99bc6d43cb9b0a439ff54242d7.r2.dev/${post.featured_image.filename_disk}`
-const authorImageUrl = `https://pub-9dc5be99bc6d43cb9b0a439ff54242d7.r2.dev/62108a67-e2b6-46d5-8ce0-b36b15d7a512.svg`
-
-const seoDescription = 
-    post.seo_meta ||                                            
-    post.excerpt ||                                             
-    post.content.replace(/<[^>]+>/g, '').slice(0, 155) + '...';
-
- 
 const breadcrumbsData = [
-    { name: 'Beranda', url: new URL('/', Astro.site).href },
-    { name: post.category.name, url: new URL(`/kategori/${post.category.slug}`, Astro.site).href },
-    { name: post.title, url: Astro.url.href } 
-
-];    
+  { name: 'Beranda', url: new URL('/', Astro.site).href },
+  { name: post.category.name, url: new URL(`/kategori/${post.category.slug}`, Astro.site).href },
+  { name: post.title, url: Astro.url.href }
+];
 ---
+
 <BaseLayout 
   title={`${post.title} | Crevalen`}
   description={seoDescription}
@@ -123,39 +134,39 @@ const breadcrumbsData = [
         </div>
       </header>
 
-{post.featured_image?.filename_disk && (
-  <img 
-    src={`https://pub-9dc5be99bc6d43cb9b0a439ff54242d7.r2.dev/${post.featured_image.filename_disk}`} 
-    alt={post.title}
-  loading="lazy"
-  decoding="async"
-  width="800"
-  height="auto"
-  class="rounded-xl w-full object-cover"
-/>
+      {post.featured_image?.filename_disk && (
+        <img 
+          src={imageUrl}
+          alt={post.title}
+          fetchpriority="high"
+          decoding="async"
+          width="800"
+          height="auto"
+          class="rounded-xl w-full object-cover"
+        />
+      )}
 
-)}
       <div class="prose prose-lg dark:prose-invert max-w-none mx-auto">
         <div set:html={post.content} />
       </div>
 
-      {post.tags && post.tags.length > 0 && (
-        <footer class="mt-12 pt-8 border-t border-[var(--color-border)] dark:border-[var(--color-dark-border)]">
-          <h3 class="font-sans font-bold text-lg mb-4 text-[var(--color-text)] dark:text-[var(--color-dark-text)]">
-            Topik Terkait
-          </h3>
-          <div class="flex flex-wrap gap-3">
-            {post.tags.map(tag => (
-              <a 
-                href={`/tags/${tag.slug}`}
-                class="inline-block bg-[var(--color-border)] dark:bg-[var(--color-dark-border)] px-4 py-1.5 rounded-full text-sm font-semibold text-[var(--color-secondary)] dark:text-[var(--color-dark-secondary)] hover:bg-[var(--color-primary)] hover:text-[var(--color-primary-text)] dark:hover:text-[var(--color-primary-text)] transition-colors duration-200"
-              >
-                # {tag.name}
-              </a>
-            ))}
-          </div>
-        </footer>
-      )}
+     {post.tags && post.tags.length > 0 && (
+  <footer class="mt-12 pt-8 border-t border-gray-300">
+    <h3 class="font-bold text-lg mb-4">Topik Terkait</h3>
+    <div class="flex flex-wrap gap-3">
+      {post.tags.map(tag => (
+        tag.tags_id && (
+          <a
+            href={`/tags/${tag.tags_id.slug}`}
+            class="bg-gray-200 px-4 py-1.5 rounded-full text-sm font-semibold text-gray-700 hover:bg-blue-600 hover:text-white transition"
+          >
+            # {tag.tags_id.name}
+          </a>
+        )
+      ))}
+    </div>
+  </footer>
+)}
 
       <ShareButtons postUrl={Astro.url.href} postTitle={post.title} />
       <RelatedArticles categoryId={post.category.id} currentPostId={post.id} />
@@ -166,18 +177,15 @@ const breadcrumbsData = [
       <div class="space-y-8">
         <CommentSection comments={commentTree} postID={post.id} />
         <h3 class="text-2xl font-bold font-sans pt-8 border-t border-[var(--color-border)]">Tinggalkan Komentar</h3>
-        <CommentForm postID={post.id} client:visible /> 
+        <CommentForm postID={post.id} client:visible />
       </div>
     </section>
   </div>
 </BaseLayout>
 
 <script define:vars={{ slug }}>
-  // Skrip ini berjalan di browser pengunjung
   async function incrementView() {
     try {
-      console.log(`[Client] Mencoba menambah view untuk slug: ${slug}`);
-      
       const response = await fetch(`/api/views/${slug}`, {
         method: 'POST',
       });
@@ -195,6 +203,5 @@ const breadcrumbsData = [
     }
   }
 
-  // Panggil fungsi saat halaman selesai dimuat
   document.addEventListener('DOMContentLoaded', incrementView);
 </script>
