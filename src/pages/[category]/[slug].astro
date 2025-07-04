@@ -1,5 +1,6 @@
 ---
 // src/pages/[category]/[slug].astro
+export const prerender = true;
 import directus from '../../lib/directus.js';
 import { readItems } from '@directus/sdk';
 import BaseLayout from '../../layouts/BaseLayout.astro';
@@ -10,7 +11,7 @@ import ShareButtons from '../../components/ShareButtons.astro';
 import RelatedArticles from '../../components/RelatedArticles.astro';
 import { Image } from 'astro:assets';
 
-export const prerender = false;
+
 
 export async function getStaticPaths() {
     const posts = await directus.request(readItems('posts', {

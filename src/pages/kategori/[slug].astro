@@ -1,12 +1,12 @@
 ---
 // src/pages/kategori/[slug].astro
+export const prerender = true;
 import directus from '../../lib/directus.js';
 import { readItems } from '@directus/sdk';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ArticleCard from '../../components/ArticleCard.astro';
 import type { Post } from '../../types';
 
-export const prerender = false;
 export async function getStaticPaths() {
     const categories = await directus.request(readItems('categories', {
         fields: ['slug']
