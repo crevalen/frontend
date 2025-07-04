@@ -68,9 +68,10 @@ const commentTree = buildCommentTree(allComments);
 
 
 const formattedDate = new Date(post.date_published).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-const imageUrl = `https://hddoosyogucukctznlog.supabase.co/storage/v1/object/public/asset/${post.featured_image.filename_disk}`;
-const authorImageUrl = post.author?.avatar ? `http://localhost:8055/assets/${post.author.avatar}` : null;
-const directusUrl = "directus-backend-production-bf8e.up.railway.app";
+const imageUrl = `https://pub-9dc5be99bc6d43cb9b0a439ff54242d7.r2.dev/${post.featured_image.filename_disk}`
+const authorImageUrl = `https://pub-9dc5be99bc6d43cb9b0a439ff54242d7.r2.dev/${post.author.avatar.filename_disk}`
+  
+
 const seoDescription = 
     post.seo_meta ||                                            
     post.excerpt ||                                             
@@ -123,17 +124,18 @@ const breadcrumbsData = [
         </div>
       </header>
 
-      {post.featured_image && post.featured_image.width && post.featured_image.height && (
-        <img 
-          src={`https://hddoosyogucukctznlog.supabase.co/storage/v1/object/public/asset/${post.featured_image.filename_disk}`} 
-          width={post.featured_image.width}
-          height={post.featured_image.height}
-          alt={`Gambar utama untuk ${post.title}`}
-          class="w-full aspect-video object-cover rounded-xl mb-12"
-          loading="lazy"
-        />
-      )}
+{post.featured_image?.filename_disk && (
+  <img 
+    src={`https://pub-9dc5be99bc6d43cb9b0a439ff54242d7.r2.dev/${post.featured_image.filename_disk}`} 
+    alt={post.title}
+  loading="lazy"
+  decoding="async"
+  width="800"
+  height="auto"
+  class="rounded-xl w-full object-cover"
+/>
 
+)}
       <div class="prose prose-lg dark:prose-invert max-w-none mx-auto">
         <div set:html={post.content} />
       </div>

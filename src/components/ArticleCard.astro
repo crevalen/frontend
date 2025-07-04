@@ -11,9 +11,7 @@ const formattedDate = new Date(post.date_published).toLocaleDateString('id-ID', 
     day: 'numeric',
 });
 
-const imageUrl = post.featured_image 
-    ? `https://hddoosyogucukctznlog.supabase.co/storage/v1/object/public/asset/${post.featured_image.filename_disk}` 
-    : '/placeholder.jpg';
+const imageUrl = `https://pub-9dc5be99bc6d43cb9b0a439ff54242d7.r2.dev/${post.featured_image.filename_disk}`
 const postUrl = `/${post.category?.slug}/${post.slug}`;
 ---
 <div class="bg-[var(--color-card)] dark:bg-[var(--color-dark-card)] border border-[var(--color-border)] dark:border-[var(--color-dark-border)] rounded-xl overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
@@ -22,10 +20,13 @@ const postUrl = `/${post.category?.slug}/${post.slug}`;
     {imageUrl && 
         <a href={postUrl} class="aspect-video overflow-hidden block">
             <img 
-                src={imageUrl} 
-                alt={`Gambar untuk artikel ${post.title}`} 
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
+    src={`https://pub-9dc5be99bc6d43cb9b0a439ff54242d7.r2.dev/${post.featured_image.filename_disk}`} 
+    alt={post.title}
+    loading="lazy"
+    decoding="async"
+    class="rounded-xl w-full"
+  />
+
         </a>
     }
 

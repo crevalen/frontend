@@ -13,7 +13,7 @@ export interface Props {
 
 const defaultTitle = 'Crevalen | Keuangan dan Investasi';
 const defaultDescription = 'Crevalen adalah Blog finansial dan investasi terpercaya. Tips realistis, strategi cerdas, dan panduan praktis membangun aset dari nol.';
-const defaultOgImage = new URL('/og-default.jpg', Astro.site).href; // Ganti dengan gambar default Anda di folder /public
+const defaultOgImage = new URL('/favicon.svg', Astro.site).href; // Ganti dengan gambar default Anda di folder /public
 
 const { 
   title = defaultTitle, 
@@ -56,11 +56,11 @@ const articleJsonLd = post ? {
     'image': imageURL,
     'author': {
       '@type': 'Person',
-      'name': post.author?.name || 'Tim BlogKeren',
+      'name': post.author?.name || 'Crevalen',
     },
     'publisher': {
       '@type': 'Organization',
-      'name': 'BlogKeren',
+      'name': 'Crevalen',
       'logo': {
         '@type': 'ImageObject',
         'url': new URL('/logo.png', Astro.site).href // Ganti dengan logo Anda di /public
@@ -95,7 +95,7 @@ const breadcrumbJsonLd = breadcrumbs && breadcrumbs.length > 0 ? {
 <meta property="og:url" content={canonicalURL} />
 <meta property="og:image" content={imageURL} />
 <meta property="og:type" content={ogType} />
-<meta property="og:site_name" content="BlogKeren" />
+<meta property="og:site_name" content="Crevalen" />
 <meta property="og:locale" content="id_ID" />
 
 {/* Twitter Card Tags */}

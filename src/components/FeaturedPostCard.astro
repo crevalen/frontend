@@ -3,7 +3,7 @@
 import type { Post } from '../types';
 const { post } = Astro.props as { post: Post };
 const postUrl = `/${post.category?.slug}/${post.slug}`;
-const imageUrl = `https://hddoosyogucukctznlog.supabase.co/storage/v1/object/public/asset/${post.featured_image.filename_disk}`
+const imageUrl = `https://pub-9dc5be99bc6d43cb9b0a439ff54242d7.r2.dev/${post.featured_image.filename_disk}`
 function createExcerpt(htmlContent: string, maxLength: number = 150) {
   const text = htmlContent.replace(/<[^>]+>/g, '');
   if (text.length <= maxLength) return text;
@@ -13,9 +13,13 @@ const excerpt = createExcerpt(post.content);
 ---
 <article class="flex flex-col h-full">
     {imageUrl && (
-        <a href={postUrl}>
-            <img src={imageUrl} alt={post.title} class="w-full aspect-[16/9] object-cover rounded-xl mb-4" />
-        </a>
+       <img 
+  src={`https://pub-9dc5be99bc6d43cb9b0a439ff54242d7.r2.dev/${post.featured_image.filename_disk}`} 
+  alt={post.title}
+  loading="lazy"
+  decoding="async"
+  class="w-full object-cover rounded-xl"
+/>
     )}
     <div class="flex flex-col flex-grow">
         <div class="flex items-center gap-4 text-xs font-sans mb-2">

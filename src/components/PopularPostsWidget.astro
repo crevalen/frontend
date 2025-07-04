@@ -10,7 +10,9 @@ const { posts } = Astro.props as { posts: Post[] };
     <div class="flex flex-col">
         {posts.map((post, index) => {
             const postUrl = `/${post.category?.slug}/${post.slug}`;
-            const imageUrl = `https://hddoosyogucukctznlog.supabase.co/storage/v1/object/public/asset/${post.featured_image.filename_disk}`
+            const imageUrl = `https://pub-9dc5be99bc6d43cb9b0a439ff54242d7.r2.dev/${post.featured_image.filename_disk}`
+
+
             return (
                 <a href={postUrl} class="flex items-center gap-4 p-5 hover:bg-[var(--color-border)]/50 transition-colors border-b border-[var(--color-border)] last:border-b-0">
                     <div class="text-3xl font-bold text-[var(--color-secondary)]/50">
